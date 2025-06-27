@@ -661,6 +661,7 @@ public:
     case AArch64::LDTRBi:
     case AArch64::LDTRSBWi:
     case AArch64::LDTRSBXi:
+    case AArch64::LDARB:
       return true;
     default:
       break;
@@ -699,6 +700,7 @@ public:
     case AArch64::LDTRHi:
     case AArch64::LDTRSHWi:
     case AArch64::LDTRSHXi:
+    case AArch64::LDARH:
       return true;
     default:
       break;
@@ -733,6 +735,7 @@ public:
     case AArch64::LDPSWpost:
     case AArch64::LDPSWpre:
     case AArch64::LDNPWi:
+    case AArch64::LDARW:
       return true;
     default:
       break;
@@ -756,6 +759,7 @@ public:
     case AArch64::LDPXi:
     case AArch64::LDPXpost:
     case AArch64::LDPXpre:
+    case AArch64::LDARX:
       return true;
     default:
       break;
@@ -1926,9 +1930,23 @@ public:
       return false;
     };
 
+    auto isStoreRelease = [&]() {
+      switch (opcode) {
+      case AArch64::STLRB:
+      case AArch64::STLRH:
+      case AArch64::STLRW:
+      case AArch64::STLRX:
+        return true;
+      default:
+        break;
+      }
+
+      return false;
+    };
+
     return isStoreRegUnscaleImm() || isStoreRegScaledImm() ||
            isStoreRegImmPreIndexed() || isStoreRegImmPostIndexed() ||
-           isStoreRegUnscaleUnpriv() || isStoreRegTrunc();
+           isStoreRegUnscaleUnpriv() || isStoreRegTrunc() || isStoreRelease();
   }
 
   bool mayStore(const MCInst &Inst) const override {
