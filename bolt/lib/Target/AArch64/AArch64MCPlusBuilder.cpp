@@ -2507,6 +2507,7 @@ public:
     // and call it if so, returns via IndCallHandler
     //   stp     x0, x1, [sp, #-16]!
     //   mrs     x1, nzcv
+    //   str     x1, [sp, #-16]!
     //   adrp    x0, InstrTrampoline
     //   add     x0, x0, #lo12:InstrTrampoline
     //   ldr     x0, [x0]
