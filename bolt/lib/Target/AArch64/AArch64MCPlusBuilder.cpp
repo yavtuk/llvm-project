@@ -1971,8 +1971,7 @@ public:
     Inst.setOpcode(AArch64::B);
     Inst.clear();
     Inst.addOperand(MCOperand::createExpr(getTargetExprFor(
-        Inst, MCSymbolRefExpr::create(Target, MCSymbolRefExpr::VK_None, *Ctx),
-        *Ctx, 0)));
+        Inst, MCSymbolRefExpr::create(Target, *Ctx), *Ctx, 0)));
   }
 
   bool analyzeBranch(InstructionIterator Begin, InstructionIterator End,
@@ -2346,13 +2345,14 @@ public:
     InstructionListType Insts;
 
     Insts.emplace_back();
-    loadReg(Insts.back(), AArch64::X1, AArch64::SP);
+    loadReg(Insts.back(), getIntArgRegister(1), AArch64::SP);
 
     Insts.emplace_back();
-    setSystemFlag(Insts.back(), AArch64::X1);
+    setSystemFlag(Insts.back(), getIntArgRegister(1));
 
     Insts.emplace_back();
-    createPopRegisters(Insts.back(), AArch64::X0, AArch64::X1);
+    createPopRegisters(Insts.back(), getIntArgRegister(0),
+                       getIntArgRegister(1));
 
     Insts.emplace_back();
     createReturn(Insts.back());
@@ -2503,11 +2503,12 @@ public:
   createInstrumentedIndCallHandlerEntryBB(const MCSymbol *InstrTrampoline,
                                           const MCSymbol *IndCallHandler,
                                           MCContext *Ctx) override {
-    // Code sequence used to check whether InstrTampoline was initialized
+    // Code sequence used to check whether InstrTrampoline was initialized
     // and call it if so, returns via IndCallHandler
     //   stp     x0, x1, [sp, #-16]!
     //   mrs     x1, nzcv
-    //   adr     x0, InstrTrampoline -> adrp + add
+    //   adrp    x0, InstrTrampoline
+    //   add     x0, x0, #lo12:InstrTrampoline
     //   ldr     x0, [x0]
     //   subs    x0, x0, #0x0
     //   b.eq    IndCallHandler
@@ -2537,9 +2538,9 @@ public:
     Insts.emplace_back();
     loadReg(Insts.back(), getIntArgRegister(0), getIntArgRegister(0));
 
-    InstructionListType cmpJmp =
+    InstructionListType CmpJmp =
         createCmpJE(getIntArgRegister(0), 0, IndCallHandler, Ctx);
-    Insts.insert(Insts.end(), cmpJmp.begin(), cmpJmp.end());
+    Insts.insert(Insts.end(), CmpJmp.begin(), CmpJmp.end());
 
     Insts.emplace_back();
     storeReg(Insts.back(), AArch64::LR, getSpRegister(/*Size*/ 8));
