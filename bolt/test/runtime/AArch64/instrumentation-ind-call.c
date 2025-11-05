@@ -15,8 +15,8 @@ int main() {
 REQUIRES: system-linux,bolt-runtime
 
 RUN: %clang %cflags %s -o %t.exe -Wl,-q -no-pie -fpie
-RUN: llvm-objdump --disassemble-symbols=main %t.exe | \
-RUN:    FileCheck %s --check-prefix=CHECKINDIRECTREG
+RUN: llvm-objdump --disassemble-symbols=main %t.exe \
+RUN:   | FileCheck %s --check-prefix=CHECKINDIRECTREG
 
 CHECKINDIRECTREG: mov w0, #0xa
 CHECKINDIRECTREG-NEXT: mov w1, #0x14
@@ -24,8 +24,8 @@ CHECKINDIRECTREG-NEXT: blr x8
 
 RUN: llvm-bolt %t.exe --instrument --instrumentation-file=%t.fdata \
 RUN:   -o %t.instrumented
-RUN: llvm-objdump --disassemble-symbols=main %t.instrumented | \
-RUN:    FileCheck %s --check-prefix=CHECK-INSTR-INDIRECTREG
+RUN: llvm-objdump --disassemble-symbols=main %t.instrumented \
+RUN:   | FileCheck %s --check-prefix=CHECK-INSTR-INDIRECTREG
 
 CHECK-INSTR-INDIRECTREG: mov w0, #0xa
 CHECK-INSTR-INDIRECTREG-NEXT: mov w1, #0x14
