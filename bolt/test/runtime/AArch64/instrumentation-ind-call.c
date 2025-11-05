@@ -50,7 +50,7 @@ CHECK-INSTR-INDIRECTREG-NEXT: ldr x30, {{.*}}
 CHECK-INSTR-INDIRECTREG-NEXT: ldp x0, x1, {{.*}}
 CHECK-INSTR-INDIRECTREG-NEXT: mov x8, x0
 CHECK-INSTR-INDIRECTREG-NEXT: ldp x0, x1, {{.*}}
-// original indirect call instruction 
+// original indirect call instruction
 CHECK-INSTR-INDIRECTREG-NEXT: blr x8
 
 # Instrumented program needs to finish returning zero
