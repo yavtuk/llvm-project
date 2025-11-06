@@ -2509,8 +2509,7 @@ public:
     //   mrs     x1, nzcv
     //   str     x1, [sp, #-16]!
     //   adrp    x0, InstrTrampoline
-    //   add     x0, x0, #lo12:InstrTrampoline
-    //   ldr     x0, [x0]
+    //   ldr     x0, [x0, #lo12:InstrTrampoline]
     //   subs    x0, x0, #0x0
     //   b.eq    IndCallHandler
     //   str     x30, [sp, #-16]!
@@ -2529,15 +2528,23 @@ public:
     Insts.emplace_back();
     storeReg(Insts.back(), getIntArgRegister(1), getSpRegister(/*Size*/ 8));
 
-    Insts.emplace_back();
-    Insts.emplace_back();
-    InstructionListType Addr =
-        materializeAddress(InstrTrampoline, Ctx, getIntArgRegister(0));
-    std::copy(Addr.begin(), Addr.end(), Insts.end() - Addr.size());
-    assert(Addr.size() == 2 && "Invalid Addr size");
+    // load handler address
+    MCInst InstAdrp;
+    InstAdrp.setOpcode(AArch64::ADRP);
+    InstAdrp.addOperand(MCOperand::createReg(getIntArgRegister(0)));
+    InstAdrp.addOperand(MCOperand::createImm(0));
+      setOperandToSymbolRef(InstAdrp, /* OpNum */ 1, InstrTrampoline,
+                        /* Addend */ 0, Ctx, ELF::R_AARCH64_ADR_GOT_PAGE);
+    Insts.emplace_back(InstAdrp);
 
-    Insts.emplace_back();
-    loadReg(Insts.back(), getIntArgRegister(0), getIntArgRegister(0));
+    MCInst InstLoad;
+    InstLoad.setOpcode(AArch64::LDRXui);
+    InstLoad.addOperand(MCOperand::createReg(getIntArgRegister(0)));
+    InstLoad.addOperand(MCOperand::createReg(getIntArgRegister(0)));
+    InstLoad.addOperand(MCOperand::createImm(0));
+      setOperandToSymbolRef(InstLoad, /* OpNum */ 2, InstrTrampoline,
+                       /* Addend */ 0, Ctx, ELF::R_AARCH64_LD64_GOT_LO12_NC);
+    Insts.emplace_back(InstLoad);
 
     InstructionListType CmpJmp =
         createCmpJE(getIntArgRegister(0), 0, IndCallHandler, Ctx);
