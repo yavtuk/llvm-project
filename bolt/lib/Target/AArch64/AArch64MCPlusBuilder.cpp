@@ -2337,18 +2337,10 @@ public:
 
   InstructionListType createInstrumentedIndCallHandlerExitBB() const override {
     // Code sequence for instrumented indirect call handler:
-    //   ldr  x1, [sp, #16]
-    //   msr  nzcv, x1
     //   ldp  x0, x1, [sp], #16
     //   ret
 
     InstructionListType Insts;
-
-    Insts.emplace_back();
-    loadReg(Insts.back(), getIntArgRegister(1), AArch64::SP);
-
-    Insts.emplace_back();
-    setSystemFlag(Insts.back(), getIntArgRegister(1));
 
     Insts.emplace_back();
     createPopRegisters(Insts.back(), getIntArgRegister(0),
@@ -2506,8 +2498,6 @@ public:
     // Code sequence used to check whether InstrTrampoline was initialized
     // and call it if so, returns via IndCallHandler
     //   stp     x0, x1, [sp, #-16]!
-    //   mrs     x1, nzcv
-    //   str     x1, [sp, #-16]!
     //   adrp    x0, InstrTrampoline
     //   ldr     x0, [x0, #lo12:InstrTrampoline]
     //   subs    x0, x0, #0x0
@@ -2521,12 +2511,6 @@ public:
     Insts.emplace_back();
     createPushRegisters(Insts.back(), getIntArgRegister(0),
                         getIntArgRegister(1));
-
-    Insts.emplace_back();
-    getSystemFlag(Insts.back(), getIntArgRegister(1));
-
-    Insts.emplace_back();
-    storeReg(Insts.back(), getIntArgRegister(1), getSpRegister(/*Size*/ 8));
 
     // load handler address
     MCInst InstAdrp;
