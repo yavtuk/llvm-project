@@ -1872,6 +1872,14 @@ public:
     return {};
   }
 
+  virtual InstructionListType materializeConstant(BinaryContext &BC,
+                                                  const MCInst &Inst,
+                                                  StringRef ConstantData,
+                                                  uint64_t Offset) const {
+    llvm_unreachable("not implemented");
+    return {};
+  }
+
   /// Creates a new unconditional branch instruction in Inst and set its operand
   /// to TBB.
   virtual void createUncondBranch(MCInst &Inst, const MCSymbol *TBB,
